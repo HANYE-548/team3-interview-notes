@@ -213,6 +213,12 @@ textarea::selection{background:#ffe27a}
 .st-head h2{margin:0;font-size:26px;line-height:1.3}
 .st-head p{margin:0;color:var(--sub);font-size:15.5px;max-width:72ch}
 .st-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px;display:grid;gap:12px;min-width:0;align-content:start}
+.emo-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}.emo-wrap svg{display:block;min-width:820px;width:100%;height:auto}
+.emo-row{display:grid;grid-template-columns:44px 1fr;gap:12px;padding:14px 0;border-top:1px solid var(--line)}.emo-row:first-of-type{border-top:0}
+.emo-n{width:36px;height:36px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-weight:700;font-size:15px}
+.emo-n.un{background:transparent;color:var(--accent);border:2px dashed var(--accent)}
+.emo-h{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}.emo-h b{font-size:16px}.emo-f{font-size:14px;font-weight:700;color:var(--accent-strong);background:var(--accent-tint);border-radius:6px;padding:1px 8px}
+.emo-b{display:grid;gap:8px;min-width:0}
 .st-card h3{margin:0;font-size:16px;color:var(--accent-strong)}
 .st-card p{margin:0}
 .st-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
@@ -901,11 +907,23 @@ function renderJSH(){return JSH.map(S=>{
   if(S.setting)body+=`<div class="pi"><div class="pi-t">팀 설정</div>${ul(S.setting.map(esc))}<p class="sub">${esc(S.note)}</p></div>`;
   body+=S.items.map(it=>pi(it.t,it.ev.map(e=>ev(e[0],e[1],e[2],e[3]||'')))).join('');
   return card(head,body);}).join('');}
+const EMO=[
+ [1,'야근','귀가 시점 판단','조급함',517,'야근이 끝나고 막차 시간에 쫓긴다. 시계만 보고 나갈 시간을 정한다.',null,[['P2-2','회사에서 야근을 하고 매우 늦게 퇴근하는 날이었습니다.','메모 q1'],['P3-1','아니 그냥 시계를 보고 나 그러면은 나는 12시','00:01:31']]],
+ [2,'출발 시점 확인','귀가 시점 판단','불안함',589,'막차는 모두가 타려고 한다. 못 탈까 봐 불안하다.',null,[['P3-2','이 시간에 막차인 경우는 모든 사람이 타려고 하잖아요.그러면은 제가 못 할 수도 있거든요.','메모 q2']]],
+ [3,'지도앱 확인','귀가 수단 선택','스트레스',618,'환승을 놓치면 집에 못 간다. 그래서 확실히 탈 수 있는 막차 버스를 고른다.',null,[['P3-2','그 환승을 못하게 돼서 아예 집에 못 가는 경우가 발생하기 때문에 가장 늦은 시간이 있는 버스를 안정적으로 선택했던 것 같아요.','메모 q1']]],
+ [4,'택시 호출','귀가 수단 선택','부담',575,'끊긴 구간만 택시를 탄다. 집까지 타면 큰돈이 든다.',null,[['P3-1','6만 원 넘을걸.','00:10:49','집까지 택시비'],['P2-2','돈이 너무 많이 듭니다. 18만 원 내지는 24만 원 나옵니다.','메모 q2']]],
+ [5,'대기','승차 장소로 이동','걱정 (가장 낮음)',661,'버스가 와도 탈 수 있을지 모른다. 줄을 서도 새치기를 당한다.',null,[['P3-2','질서정연하게 나는 줄을 서도 사람들은 나를 새치기 하고 밀치고 들어가요.','메모 q2'],['P3-1','그러면은 이제 그 버스에 켜 가지고 그 자녀 자석이랑 뒤에 오는 거 확인을 하고 아 망했다.','00:14:34','만석일 때']]],
+ [6,'탑승','탑승 및 이동','안도 (가장 높음)',330,'탔다는 게 확정되면 안도한다. 기사가 불을 꺼 주면 잠든다.',null,[['P3-2','또 기사님이 불을 꺼주시거든요.늦은 시간에 그래서 잠을 잘 수 있고 굉장히 편안한 승차감으로 장거리 이동이 가능하다는 점에서','메모 q2']]],
+ [7,'이동','탑승 및 이동','답답함',546,'타고 나면 눈부심과 옆자리가 신경 쓰인다.',null,[['P3-2','너무 눈부셔요.','메모 마무리']]],
+ [8,'하차','하차','힘듦',589,'짐이 많으면 내리기 힘들다. 옆 사람이 비켜 주지 않기도 한다.',null,[['P3-2','제 짐이 많은 경우에는 그걸 갖고 나가기가 굉장히 힘들어요.','메모 q3']]],
+ [9,'집까지 걷기','하차','두려움',654,'어둡고 사람 없는 길을 걷는다.','버스에서 내려 집까지 걸어갈 때 어땠나요?',[]],
+ [10,'귀가','안전귀가','안도',373,'집에 도착해 씻고 자고 싶다.','집에 도착했을 때 어떤 기분이었나요?',[]]
+];
 const STORY=[
  {t:'시작',sub:'우리가 무엇을 알고 싶었나',h:()=>`
   ${card('프로젝트 주제',`<p class="st-big">자율주행 합승 이동 서비스(DRT), 사람들은 어떤 조건에서 믿고 탈까?</p><p class="sub">차량 시스템이 운전을 맡고, 비슷한 방향의 다른 승객이 같은 차에 함께 타는 이동 서비스를 연구했어요. 서비스가 필요하다고 미리 정하지 않고, 지금 사람들이 어떻게 이동하는지부터 조사했어요.</p>`)}
   ${card('출발할 때 세운 대표 가설',`<p class="st-big">소비자가 스스로 선택할 수 있는 영역이 넓어질 때 편안함과 안정감을 느낄 것이다.</p><p class="sub">하위 가설: 관계 통제(누구와 함께할지), 공간 통제(내 자리), 탈출 통제(불안할 때 벗어나기)</p>`)}
-  ${card('이 페이지에서 보는 순서',`<div class="st-flow"><span>환경분석</span><i>→</i><span>조사 계획</span><i>→</i><span>질문지</span><i>→</i><span>인터뷰</span><i>→</i><span>태그별 정리</span><i>→</i><span>신뢰와 불안</span><i>→</i><span>패턴과 조건</span><i>→</i><span>가설 검증</span><i>→</i><span>페르소나</span><i>→</i><span>다음 단계</span></div><p class="sub">모든 근거에는 참여자 번호와 위치(녹취 시간 또는 메모 칸)를 붙였어요. 번호를 누르면 그 인터뷰의 질문지와 메모로 이동해요.</p>`)}
+  ${card('이 페이지에서 보는 순서',`<div class="st-flow"><span>환경분석</span><i>→</i><span>조사 계획</span><i>→</i><span>질문지</span><i>→</i><span>인터뷰</span><i>→</i><span>태그별 정리</span><i>→</i><span>신뢰와 불안</span><i>→</i><span>패턴과 조건</span><i>→</i><span>가설 검증</span><i>→</i><span>페르소나</span><i>→</i><span>감정선</span><i>→</i><span>다음 단계</span></div><p class="sub">모든 근거에는 참여자 번호와 위치(녹취 시간 또는 메모 칸)를 붙였어요. 번호를 누르면 그 인터뷰의 질문지와 메모로 이동해요.</p>`)}
   ${guest?'<div class="guest-note">참여자 보호를 위해 이름은 가리고 번호만 보여요.</div>':''}`},
  {t:'환경분석',sub:'STEEP-V에서 고른 세 가지 변화',h:()=>`
   <div class="st-grid3">
@@ -985,9 +1003,28 @@ const STORY=[
    <tr><td>P4 여행객</td><td>근거가 한 명이라 보류. 추가 인터뷰 후 판단</td></tr>
    <tr><td>P5 프리랜서</td><td>틀려도 잃는 게 적은 예외. 장시희를 가르는 조건을 보여 줌</td></tr></tbody></table>`)}
   ${card('왜 한 명에 집중했나',ul(['근거가 가장 많다: 직장인과 통학생 3명에게서 같은 행동이 반복됐다','대표 가설과 바로 이어진다: 시간과 탈 수 있는지는 확실하면 맡기고, 낯선 사람과의 공간은 직접 피한다','다른 타겟에서도 같은 판단 기준이 나왔다']))}`},
- {t:'다음 단계',sub:'여정맵과 기회 영역으로',h:()=>`
+ {t:'감정선',sub:'장시희의 귀갓길, 어디서 감정이 바뀌나',h:()=>{
+  const P=EMO.map((e,i)=>({x:60+i*90,y:30+(e[4]-301)/360*190,e}));
+  const seg=P.slice(1).map((p,i)=>{const a=P[i];const un=p.e[6]||a.e[6];return `<line x1="${a.x}" y1="${a.y}" x2="${p.x}" y2="${p.y}" stroke="var(--accent)" stroke-width="3" ${un?'stroke-dasharray="7 6"':''}/>`;}).join('');
+  const dots=P.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="9" fill="${p.e[6]?'var(--surface)':'var(--accent)'}" stroke="var(--accent)" stroke-width="3"/><text x="${p.x}" y="${p.y-16}" text-anchor="middle" font-size="15" font-weight="700" fill="var(--fg)">${p.e[0]}</text><text x="${p.x}" y="262" text-anchor="middle" font-size="14" fill="var(--sub)">${esc(p.e[1])}</text>`).join('');
+  const grid=[['좋음',30],['보통',125],['나쁨',220]].map(([l,y])=>`<line x1="40" y1="${y}" x2="930" y2="${y}" stroke="var(--line)"/><text x="0" y="${y+5}" font-size="14" fill="var(--faint)">${l}</text>`).join('');
+  const svg=`<div class="emo-wrap"><svg viewBox="0 0 940 280" role="img" aria-label="장시희 귀갓길 감정선. 5번 대기에서 가장 낮고 6번 탑승에서 가장 높다.">${grid}${seg}${dots}</svg></div>`;
+  let lastStage='';
+  const rows=EMO.map(e=>{const head=e[2]!==lastStage?`<h4 style="margin:18px 0 0;font-size:15px;color:var(--sub)">${esc(e[2])}</h4>`:'';lastStage=e[2];
+   return head+`<div class="emo-row"><span class="emo-n ${e[6]?'un':''}">${e[0]}</span><div class="emo-b"><div class="emo-h"><b>${esc(e[1])}</b><span class="emo-f">${esc(e[3])}</span>${e[6]?'<span class="mark m-cost">미확인</span>':''}</div><p style="margin:0">${esc(e[5])}</p>${e[6]?`<p class="sub" style="margin:0">근거 없음. 팀이 세운 장면이에요. 다음 인터뷰에서 물어볼 질문: “${esc(e[6])}”</p>`:e[7].map(v=>ev(v[0],v[1],v[2],v[3]||'')).join('')}</div></div>`;}).join('');
+  return `
+  ${card('범위',`<p><b>한 사람</b> 장시희, <b>한 목표</b> 확실히 집에 도착하기, <b>한 상황</b> 야근이 끝난 밤 여의도에서 막차 광역버스로 수원 집까지</p><p class="sub">우리 서비스는 넣지 않았어요. 지금 버스와 지하철, 택시로 가는 모습(As-is)만 그렸어요. 높낮이는 말과 행동을 바탕으로 한 해석이에요. 수치를 잰 것이 아니에요.</p>`)}
+  ${card('감정선',svg+`<p class="sub">실선과 채운 점은 인터뷰 근거가 있어요. 점선과 빈 점(9, 10)은 근거가 없는 팀 추측이에요.</p>`)}
+  <div class="st-grid3">
+  ${card('단절: 막차를 놓치면',`<p>흐름이 끊긴다. 끊긴 구간만 택시로 이어 간다.</p>${ev('P3-1','그 사당력까지 그러니까 그 지하철역 거기를 택시로 대체를 하고','00:02:54')}`)}
+  ${card('전환 ① 불안에서 안도로 (5 → 6)',`<p>탈 수 있다는 게 확정되는 순간 감정이 가장 크게 오른다.</p>`)}
+  ${card('전환 ② 안도에서 답답함으로 (6 → 7)',`<p>타고 나면 걱정이 바뀐다. 이제는 눈부심, 옆자리, 짐 같은 공간 문제다.</p>`)}
+  </div>
+  ${card('장면별 근거',rows)}
+  ${card('감정선에서 알게 된 것',`<p class="st-big">가장 큰 전환은 탑승 순간이다. 장시희의 감정을 올리는 건 빠름이 아니라 "탈 수 있다는 확신"이다.</p>`)}`;}},
+ {t:'다음 단계',sub:'기회 영역과 남은 질문',h:()=>`
   ${card('여정맵 범위',`<p><b>한 사람</b> 장시희 · <b>한 목표</b> 확실히 집에 도착하기 · <b>한 상황</b> 야근이 끝난 밤, 막차로 집에 가기</p><p class="sub">우리 서비스는 넣지 않고, 지금 버스와 지하철, 택시로 어떻게 가는지만 그려요. 근거가 없는 칸은 '미확인'으로 비워 둬요.</p>`)}
-  ${card('기회 영역 후보',ul(['늦은 밤에도 탈 수 있다는 걸 미리 확신할 수 있는 귀가 경험','낯선 사람과 함께여도 혼자 감당하지 않아도 되는 이동 경험','계획이 틀어졌을 때도 비싼 택시 말고 되돌릴 방법이 있는 경험'])+'<p class="sub">기능이 아니라 방향으로 적었어요. 아이디어는 이 방향 안에서 따로 모아요.</p>')}
+  ${card('기회 영역',ul(['A. 탈 수 있는지 미리 알 수 있는 귀갓길 (감정선 2, 5)','B. 막차를 놓쳐도 택시 없이 이어지는 귀갓길 (감정선 4, 단절)','C. 낯선 사람과 함께여도 편한 차 안 (감정선 7, 8)'])+'<p class="sub">기능이 아니라 방향으로 적었어요. 아이디어는 이 방향 안에서 따로 모아요.</p>')}
   ${card('아직 모르는 것',ul(['탈출 통제: 불안할 때 내리거나 멈추고 싶었던 경험','직장인 인터뷰 추가: 장시희 근거 보강','여행자: 추가 인터뷰 후 보조 페르소나로 둘지 판단']))}`}
 ];
 function renderStory(){
