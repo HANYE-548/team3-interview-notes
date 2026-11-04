@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>막차 귀갓길 시나리오 게임</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a facilitator's game table. Top bar with mode tabs, a step rail, and one "table" area where cards are laid out. */
+:root{
+  --bg:#f3f1ec; --surface:#fffdf8; --ink:#1d2330; --sub:#5b6170; --line:#d9d4c8; --faint:#ece8de;
+  --accent:#d9541e; --accent-ink:#fff; --accent-soft:#fbe6dc;
+  --time:#2f6fd6; --time-s:#e3ecfb; --cost:#b98300; --cost-s:#f8efd6; --safe:#c72d5e; --safe-s:#f9e1e9; --ease:#2c8a49; --ease-s:#e0f1e5;
+  --night:#3b5cb8; --night-s:#e2e8f8; --future:#d9541e; --future-s:#fbe6dc; --opt:#6b45c9; --opt-s:#ece5fa; --event:#c2364a; --event-s:#f8e0e3; --cons:#5c6370; --cons-s:#e8e9ec; --blank:#c9a100; --blank-s:#fbf3cf;
+  --ok:#2c8a49; --mid:#c99500; --no:#c7372f;
+  --f-display:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#15171c; --surface:#1e2128; --ink:#eceae4; --sub:#a3a7b2; --line:#343844; --faint:#262a33;
+  --accent:#ff7a45; --accent-ink:#1a0f08; --accent-soft:#3a2418;
+  --time:#7aa7ff; --time-s:#1d2a44; --cost:#e8b84a; --cost-s:#352c14; --safe:#ff7aa2; --safe-s:#3a1b27; --ease:#6fd08f; --ease-s:#173022;
+  --night:#8ea6ff; --night-s:#1f2742; --future:#ff7a45; --future-s:#3a2418; --opt:#b39cff; --opt-s:#2a2142; --event:#ff8090; --event-s:#3a1c22; --cons:#b3b8c4; --cons-s:#2a2d35; --blank:#f0cd4a; --blank-s:#352e12;
+  --ok:#6fd08f; --mid:#f0cd4a; --no:#ff7f76; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#15171c; --surface:#1e2128; --ink:#eceae4; --sub:#a3a7b2; --line:#343844; --faint:#262a33;
+  --accent:#ff7a45; --accent-ink:#1a0f08; --accent-soft:#3a2418;
+  --time:#7aa7ff; --time-s:#1d2a44; --cost:#e8b84a; --cost-s:#352c14; --safe:#ff7aa2; --safe-s:#3a1b27; --ease:#6fd08f; --ease-s:#173022;
+  --night:#8ea6ff; --night-s:#1f2742; --future:#ff7a45; --future-s:#3a2418; --opt:#b39cff; --opt-s:#2a2142; --event:#ff8090; --event-s:#3a1c22; --cons:#b3b8c4; --cons-s:#2a2d35; --blank:#f0cd4a; --blank-s:#352e12;
+  --ok:#6fd08f; --mid:#f0cd4a; --no:#ff7f76; color-scheme:dark}
+*{box-sizing:border-box}body{margin:0}[hidden]{display:none!important}img{max-width:100%}
+.datapanel{margin-top:26px}.datapanel .row{gap:8px}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-display);font-size:15px;line-height:1.55}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding-block:12px}
+.brand{font-weight:700;font-size:17px;letter-spacing:-.01em}.brand small{display:block;font-weight:500;font-size:12px;color:var(--sub);letter-spacing:.02em}
+nav.tabs{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+nav.tabs a{color:var(--sub);text-decoration:none;font-weight:600;padding:7px 14px;border-radius:999px;font-size:14px}
+nav.tabs a[aria-current="page"]{background:var(--ink);color:var(--bg)}
+nav.tabs a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+main{padding-block:22px 60px}
+h1{font-size:26px;margin:0 0 4px;text-wrap:balance;letter-spacing:-.02em}
+h2{font-size:20px;margin:0 0 6px;text-wrap:balance}
+h3{font-size:16px;margin:0 0 6px}
+.lede{color:var(--sub);margin:0 0 18px;max-width:68ch}
+.muted{color:var(--sub)}
+.note{background:var(--accent-soft);border-radius:10px;padding:10px 14px;font-size:14px}
+.btn{font:inherit;font-weight:600;border:1.5px solid var(--ink);background:var(--surface);color:var(--ink);border-radius:10px;padding:8px 14px;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{border-color:var(--line)}
+.btn.small{padding:4px 10px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.g6{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+label.f{display:grid;gap:4px;font-size:13px;font-weight:600;color:var(--sub)}
+input[type=text],textarea,select{font:inherit;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:8px;padding:7px 10px;width:100%;min-width:0}
+textarea{min-height:58px;resize:vertical}
+/* cards */
+.card{--c:var(--ink);--cs:var(--faint);background:var(--cs);border:2px solid var(--c);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0;box-shadow:3px 3px 0 var(--c)}
+.card .code{font-family:var(--f-mono);font-size:12px;font-weight:500;color:var(--c);letter-spacing:.04em}
+.card .tx{font-weight:700;font-size:16.5px;line-height:1.45}
+.card .meta{font-size:12.5px;color:var(--sub)}
+.k-night{--c:var(--night);--cs:var(--night-s)}.k-journey{--c:var(--ink);--cs:var(--surface)}.k-future{--c:var(--future);--cs:var(--future-s)}.k-opt{--c:var(--opt);--cs:var(--opt-s)}.k-event{--c:var(--event);--cs:var(--event-s)}.k-cons{--c:var(--cons);--cs:var(--cons-s)}.k-blank{--c:var(--blank);--cs:var(--blank-s)}
+.k-time{--c:var(--time);--cs:var(--time-s)}.k-cost{--c:var(--cost);--cs:var(--cost-s)}.k-safe{--c:var(--safe);--cs:var(--safe-s)}.k-ease{--c:var(--ease);--cs:var(--ease-s)}
+.pick{cursor:pointer;transition:transform .12s}
+.pick[aria-pressed="true"]{outline:4px solid var(--c);outline-offset:2px;transform:translateY(-2px)}
+.pick:hover{transform:translateY(-2px)}
+@media (prefers-reduced-motion:reduce){.pick,.pick:hover{transition:none;transform:none}}
+button.card{font:inherit;color:inherit;text-align:left}
+.chip{font:inherit;font-size:13px;font-weight:600;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.react{display:flex;gap:6px;flex-wrap:wrap}
+.react .chip[data-v="ok"][aria-pressed="true"]{background:var(--ok);border-color:var(--ok);color:var(--bg)}
+.react .chip[data-v="mid"][aria-pressed="true"]{background:var(--mid);border-color:var(--mid);color:#1d1600}
+.react .chip[data-v="no"][aria-pressed="true"]{background:var(--no);border-color:var(--no);color:var(--bg)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px;display:grid;gap:12px;min-width:0}
+.ask{font-size:15px;background:var(--faint);border-left:4px solid var(--accent);border-radius:6px;padding:8px 12px}
+.ask b{color:var(--accent)}
+/* play layout */
+.play{display:grid;grid-template-columns:220px minmax(0,1fr);gap:18px}
+@media (max-width:820px){.play{grid-template-columns:1fr}}
+.rail{display:flex;flex-direction:column;gap:4px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px);align-self:start}
+@media (max-width:820px){.rail{position:static;flex-direction:row;overflow-x:auto;padding-bottom:4px}}
+.rail button{font:inherit;text-align:left;border:0;background:transparent;color:var(--sub);padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:600;white-space:nowrap;display:flex;gap:8px;align-items:baseline}
+.rail button .n{font-family:var(--f-mono);font-size:12px}
+.rail button[aria-current="step"]{background:var(--ink);color:var(--bg)}
+.rail button.done{color:var(--ink)}
+.stage{display:grid;gap:16px;min-width:0}
+.stephead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.time{font-family:var(--f-mono);font-size:12px;color:var(--sub)}
+.foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:14px}
+.status{font-size:13px;color:var(--sub)}
+.situation{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr);gap:14px;align-items:start}
+@media (max-width:720px){.situation{grid-template-columns:1fr}}
+.vs{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:stretch}
+.vs .or{align-self:center;font-weight:700;color:var(--sub)}
+@media (max-width:520px){.vs{grid-template-columns:1fr}.vs .or{justify-self:center}}
+.board3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:640px){.board3{grid-template-columns:1fr}}
+.bin{border:2px dashed var(--opt);border-radius:12px;padding:10px;min-height:90px;display:flex;flex-direction:column;gap:6px}
+.bin h4{margin:0;font-size:14px;color:var(--opt)}
+.optrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;border-bottom:1px solid var(--line);padding-block:8px}
+.optrow:last-child{border-bottom:0}
+.seg{display:flex;gap:4px;flex-wrap:wrap}
+/* lists */
+.sessions{display:grid;gap:8px}
+.srow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.badge{font-family:var(--f-mono);font-size:12px;font-weight:500;border-radius:6px;padding:2px 8px;background:var(--ink);color:var(--bg)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12.5px;color:var(--sub);font-weight:600;background:var(--faint);white-space:nowrap}
+td.num{font-variant-numeric:tabular-nums;text-align:right}
+.bar{display:flex;height:10px;border-radius:999px;overflow:hidden;background:var(--faint);min-width:80px}
+.bar i{display:block}
+.quote{border-left:3px solid var(--line);padding-left:10px;font-size:14px}
+.quote .who{font-family:var(--f-mono);font-size:12px;color:var(--sub)}
+.verdict{border-radius:12px;padding:12px 14px;background:var(--faint);display:grid;gap:4px}
+.verdict b{font-size:15px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--sub)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.deckhead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:8px}
+.empty{border:2px dashed var(--line);border-radius:14px;padding:22px;text-align:center;color:var(--sub)}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="wrap">
+  <div class="brand">막차 귀갓길 시나리오 게임<small>3팀 코크리에이션, 1:1 세션 진행 도구</small></div>
+  <nav class="tabs" aria-label="화면">
+    <a href="#play" data-tab="play">세션 진행</a>
+    <a href="#results" data-tab="results">팀 결과</a>
+    <a href="#cards" data-tab="cards">카드 전체</a>
+  </nav>
+</div></header>
+
+<main class="wrap" id="app"></main>
+
+<script>
+/* ===================== CARD DATA (우리 팀 카드 세트) ===================== */
+const NIGHT={T:[['T1','밤 11시'],['T2','자정'],['T3','새벽 1시 이후']],L:[['L1','회사 앞'],['L2','환승 정류장'],['L3','집 근처 정류장'],['L4','집 앞 골목']],R:[['R1','오늘은 혼자'],['R2','오늘은 동료와 같이'],['R3','오늘은 짐이 많은 날']]};
+const JOURNEY=[['J1','① 퇴근 시간 정하기','막차 시간을 생각하며 나갈 때를 정한다'],['J2','② 무엇을 탈지 정하기','버스, 지하철, 택시 중 무엇을 탈지 고른다'],['J3','③ 정류장에서 기다리기','차가 오기를 기다린다'],['J4','④ 타고 가기','차 안에서 시간을 보낸다'],['J5','⑤ 내리기','내릴 곳에서 내린다'],['J6','⑥ 집까지 걷기','(빈칸) 참여자가 채운다']];
+const PREMISE='앱으로 부르면 기사 없는 차가 와요. 같은 방향 사람 몇 명과 함께 타고, 갈아타지 않고 집 근처까지 한 번에 가요.';
+const FUTURE=[['N1','부르면 온다','부르면 내 자리가 미리 정해지고, 차가 지금 어디쯤인지, 몇 분 뒤 오는지 화면에 나와요.','수요응답, 기회 A','"그날 밤 몇 번 장면이 달라졌을까요?"'],['N2','함께 탄다','같은 방향의 모르는 사람 몇 명과 한 차에 타요.','합승','"어느 장면에서 망설여지세요?"'],['N4','막차 이후에도','막차가 끊긴 뒤에도 다녀요. 요금은 택시의 절반쯤이에요.','존재 이유, 기회 B','"막차 이후, 요금 중 무엇 때문에 타세요 / 망설여지세요?"']];
+const N3=['N3','기사가 없다','차 안에는 승객만 있어요. 그래도 안심하고 타려면 무엇이 있어야 할까요?','무인, 기회 C, 가장 큰 Unknown'];
+const OPTIONS=[['S1','인원 제한','한 차에 최대 4명까지만 타요.','ok'],['S2','짐칸','짐은 따로 두는 칸이 있어요.','ok'],['S3','칸막이 좌석','좌석이 칸막이로 나뉘어 있어요.','pink'],['S4','좌석 배정','옆자리는 배정된 대로 앉아요.','pink'],['S5','동승자 정보','함께 탄 사람이 어디서 내리는지 서로 화면에 보여요.','pink'],['S6','집 도착 확인','내린 뒤 "집에 도착했어요" 버튼을 누르게 돼요. 10분 안에 누르지 않으면 미리 정한 사람에게 알림이 가요.','unk']];
+const CRIT={
+ '시간-①':['time','빨리 집에 도착한다','전체 걸리는 시간'],'시간-②':['time','기다리지 않는다','정류장 대기'],'시간-③':['time','도착 시간이 정확하다','예측, 연착 없음'],
+ '비용-①':['cost','큰돈이 나가지 않는다','한 번의 큰 지출'],'비용-②':['cost','낸 만큼 값어치가 있다','가성비'],'비용-③':['cost','손해 보지 않는다','환승 요금, 헛돈'],
+ '안전-①':['safe','놓칠 걱정 없이 탈 수 있다','확실함'],'안전-②':['safe','모르는 사람과 단둘이 있지 않는다','사람'],'안전-③':['safe','무슨 일이 생기면 도와줄 사람이 있다','지켜봄'],
+ '편안-①':['ease','가는 동안 잠들 수 있다','쉬기'],'편안-②':['ease','옆 사람 신경 쓰지 않고 간다','내 공간']};
+const CATNAME={time:'시간',cost:'비용',safe:'안전',ease:'편안함'};
+const CONS=[['K1','공휴일이라 막차가 평소보다 일찍 끊겼어요.','now','시간-①','비용-①'],['K2','회사에서 나왔는데 막차까지 10분 남았어요.','now','안전-①','비용-①'],['K3','내일 아침 일찍 출근해야 해요.','now','시간-①','비용-②'],['K4','택시를 타면 집까지 6만 원이 넘어요.','now','비용-①','안전-②'],['K5','같이 타면 다른 사람을 내려 주느라 15분 더 걸려요.','future','시간-①','비용-②'],['K6','혼자 타면 요금이 2배예요.','future','비용-①','안전-②']];
+const ETYPES={T:['⏱ 시간','확정이 깨질 때'],R:['👥 관계','함께 탄 사람이 불편할 때'],S:['🪑 공간','내 자리가 침범될 때'],X:['🚪 탈출','벗어나고 싶은데 못 할 때'],A:['🌙 하차 후','내린 뒤 혼자 걸을 때']};
+const EVENTS=[
+ ['T1','T','③','부른 차가 10분 늦는대요.','시간-②','안전-①'],['T2','T','③','출발 직전 "함께 탈 사람이 늘어 경로가 바뀌었어요" 알림이 와요. 도착이 15분 늦어져요.','시간-③','비용-②'],['T3','T','④','다른 승객을 먼저 내려 주느라 내 도착이 계속 늦어지고 있어요.','시간-①','비용-②'],
+ ['R1','R','④','함께 탄 사람이 술에 많이 취했어요.','안전-③','비용-①'],['R2','R','④','함께 탄 사람이 큰 소리로 계속 통화해요.','편안-②','비용-②'],['R3','R','④','함께 탄 사람이 자꾸 말을 걸어요.','안전-②','시간-①'],['R4','R','⑤','다른 사람이 다 내리고 나 혼자 남았어요.','안전-②','안전-③'],
+ ['S1','S','④','이동 중 옆 승객의 짐과 몸이 점점 내 자리 쪽으로 넘어와요.','편안-②','비용-②'],['S2','S','④','차 안 불이 너무 밝아서 잠을 잘 수 없어요. 조절하는 곳이 안 보여요.','편안-①','시간-①'],['S3','S','⑤','내릴 곳인데 안쪽 자리라서 짐을 들고 옆 사람을 지나 나가야 해요.','편안-②','시간-①'],
+ ['X1','X','④','차가 길 한가운데서 멈췄어요.','안전-③','시간-①'],['X2','X','④','불안해서 지금 당장 내리고 싶은데, 목적지가 아닌 곳이에요.','안전-②','비용-③'],['X3','X','④','차가 처음 보는 길로 돌아가요. 이유는 나오지 않아요.','안전-③','시간-③'],
+ ['A1','A','⑥','내린 곳이 생각보다 어둡고 사람이 없어요.','안전-③','비용-①'],['A2','A','⑥','내린 곳이 집에서 생각보다 멀어요. 5분은 더 걸어야 해요.','시간-①','비용-①']];
+const EV=Object.fromEntries(EVENTS.map(e=>[e[0],e]));
+const ROLES={core:'Core User (막차 귀가 직장인)',contrast:'Contrast (서울 안 이동자, 여행객)',driver:'Operator (버스, 택시 기사)'};
+
+/* ===================== STEPS ===================== */
+const STEPS_USER=[
+ {id:'start',t:'시작',min:'0~2분'},{id:'night',t:'① 그날 밤',min:'2~6분'},{id:'journey',t:'② 여정과 ★',min:'6~13분'},
+ {id:'future',t:'③ 필수 미래 조건',min:'13~19분'},{id:'cons',t:'④ 제약 상황',min:'19~25분'},{id:'events',t:'⑤ 이벤트',min:'25~33分'.replace('分','분')},
+ {id:'n3',t:'⑥ 기사 없는 차 안',min:'33~36분'},{id:'opts',t:'⑦ 옵션 고르기',min:'36~39분'},{id:'close',t:'⑧ 마무리',min:'39~40분'}];
+const STEPS_DRIVER=[{id:'start',t:'시작',min:'0~2분'},{id:'dhidden',t:'① 숨은 일',min:'2~8분'},{id:'dpass',t:'② 승객 결과 보기',min:'8~13분'},{id:'devents',t:'③ 이벤트 대응',min:'13~19분'},{id:'dclose',t:'④ 마무리',min:'19~20분'}];
+
+/* ===================== STORE ===================== */
+let db=null, sessions={}, cur=null, step=0, saveTimer=null, saving='', storeMode='local';
+const LS='drt-cocreation-sessions';
+function lsLoad(){try{return JSON.parse(localStorage.getItem(LS)||'{}')}catch(e){return {}}}
+function lsSave(){try{localStorage.setItem(LS,JSON.stringify(sessions))}catch(e){}}
+sessions=lsLoad();
+(async()=>{
+  await 0; // let the rest of the script define its helpers first
+  try{ if(window.claude&&claude.use){ db=await claude.use('db'); } }catch(e){db=null}
+  if(db){
+    storeMode='shared';
+    db.collection('sessions').onSnapshot(snap=>{
+      const next={};snap.docs.forEach(d=>{next[d.id]=d.data()});
+      // keep the local unsaved copy of the open session
+      if(cur&&next[cur.id]&&(next[cur.id].updatedAt||0)<(cur.updatedAt||0)) next[cur.id]=cur;
+      sessions=next; if(view!=='play'||!cur) render(); else renderRailOnly();
+    },err=>{storeMode='local';db=null;render()});
+  }
+  render();
+})();
+function newSession(code,role){
+  const id=(code||'P')+'-'+Date.now().toString(36);
+  return {id,code,role,createdAt:Date.now(),updatedAt:Date.now(),consent:false,facilitator:'',night:{},journey:{},star:'',starWhy:'',j6:{text:'',ei:''},future:{},cons:{},played:[],events:{},drawn:[],n3:{text:'',ei:''},opts:{},flip:'',flipWhy:'',b1:'',b2:'',changed:'',worry:'',relay:'',
+    hidden:'',dpass:'',devents:{},dreplace:'',dhard:''};
+}
+function markDirty(){ if(!cur) return; cur.updatedAt=Date.now(); sessions[cur.id]=cur; lsSave(); saving='저장 대기 중'; setStatus(); clearTimeout(saveTimer); saveTimer=setTimeout(flush,900); }
+async function flush(){
+  clearTimeout(saveTimer); if(!cur) return;
+  if(!db){ saving='이 브라우저에 저장됨'; setStatus(); return; }
+  saving='저장 중…'; setStatus();
+  try{ await db.doc('sessions/'+cur.id).set(JSON.parse(JSON.stringify(cur))); saving='팀 공유 저장 완료'; }
+  catch(e){ saving = e&&e.code==='invalid_argument' ? '저장 권한이 없어요. 이 페이지의 공유 설정에서 "참여자" 이상 권한이 필요해요.' : '저장하지 못했어요. 잠시 뒤 다시 저장돼요.'; }
+  setStatus();
+}
+function setStatus(){ const el=document.getElementById('status'); if(el) el.textContent=saving; }
+
+/* ===================== HELPERS ===================== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function critCard(code,pressed,attr){const [k,tx,m]=CRIT[code];return `<button type="button" class="card pick k-${k}" aria-pressed="${pressed?'true':'false'}" ${attr}><span class="code">${code} · ${CATNAME[k]}</span><span class="tx">${esc(tx)}</span><span class="meta">${esc(m)}</span></button>`.replace(' · ',', ')}
+function reactUI(path,val){return `<div class="react" role="group" aria-label="반응">${[['ok','🟢 탄다'],['mid','🟡 고민'],['no','🔴 안 탄다']].map(([v,l])=>`<button type="button" class="chip" data-v="${v}" data-set="${path}" data-val="${v}" aria-pressed="${val===v}">${l}</button>`).join('')}</div>`}
+function eiUI(path,val){return `<div class="seg" role="group" aria-label="근거 수준">${[['E','실제 경험 (E)'],['I','상상 (I)']].map(([v,l])=>`<button type="button" class="chip" data-set="${path}" data-val="${v}" aria-pressed="${val===v}">${l}</button>`).join('')}</div>`}
+function ta(path,val,ph,id){return `<textarea id="${id||('t-'+path.replace(/\W/g,'_'))}" data-text="${path}" placeholder="${esc(ph||'')}">${esc(val||'')}</textarea>`}
+function getP(o,p){return p.split('.').reduce((a,k)=>a==null?a:a[k],o)}
+function setP(o,p,v){const ks=p.split('.');let a=o;ks.slice(0,-1).forEach(k=>{if(a[k]==null||typeof a[k]!=='object')a[k]={};a=a[k]});a[ks.at(-1)]=v}
+function ask(html){return `<div class="ask">${html}</div>`}
+
+/* ===================== ROUTING ===================== */
+let view='play';
+function route(){const h=(location.hash||'#play').slice(1);view=['play','results','cards'].includes(h)?h:'play';document.querySelectorAll('nav.tabs a').forEach(a=>a.setAttribute('aria-current',a.dataset.tab===view?'page':'false'));render()}
+window.addEventListener('hashchange',route);
+
+function render(){
+  const app=$('#app');
+  if(view==='results') app.innerHTML=renderResults();
+  else if(view==='cards') app.innerHTML=renderCards();
+  else app.innerHTML=cur?renderPlay():renderLobby();
+}
+function renderRailOnly(){const r=document.getElementById('rail');if(r)r.outerHTML=railHTML();}
+
+/* ===================== LOBBY ===================== */
+function renderLobby(){
+  const list=Object.values(sessions).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  return `<h1>세션 진행</h1>
+  <p class="lede">참여자 한 명과 40분(기사는 20분) 동안 카드를 함께 놓아 가며 진행해요. 진행자가 이 화면을 공유하고, 참여자의 답을 그대로 입력해요. 입력한 내용은 ${storeMode==='shared'?'<b>팀 전체가 보는 결과</b>에 자동 저장돼요.':'<b>이 브라우저에</b> 저장돼요. 세션이 끝나면 아래 <b>결과 파일 저장</b>으로 내려받아 팀과 나눠 주세요.'}</p>
+  <div class="grid g2">
+   <section class="panel" aria-labelledby="new-h"><h2 id="new-h">새 세션 시작</h2>
+    <label class="f" for="in-code">참여자 번호<input type="text" id="in-code" placeholder="예: W1, X1, D1" maxlength="8"></label>
+    <div><div class="muted" style="font-size:13px;font-weight:600;margin-bottom:4px">역할</div><div class="seg" id="role-pick">${Object.entries(ROLES).map(([k,v],i)=>`<button type="button" class="chip" data-role="${k}" aria-pressed="${i===0}">${esc(v)}</button>`).join('')}</div></div>
+    <label class="f" for="in-fac">진행자 / 기록자 (팀원 이름 또는 이니셜)<input type="text" id="in-fac" placeholder="예: 혜진 / 민수"></label>
+    <div class="row"><button class="btn primary" id="btn-new" type="button">세션 시작</button><span class="muted" style="font-size:13px">이름 대신 번호만 써 주세요.</span></div>
+   </section>
+   <section class="panel"><h2>진행 흐름 한눈에</h2>
+    <ol style="margin:0;padding-left:18px;display:grid;gap:3px">${STEPS_USER.slice(1).map(s=>`<li>${esc(s.t.replace(/^[①-⑧]\s/,''))} <span class="time">${s.min}</span></li>`).join('')}</ol>
+    <p class="muted" style="margin:0;font-size:13px">꼬리 질문은 항상 "실제로 그런 적 있으세요?" / "어느 장면에서 망설여지세요?" "이 서비스 좋을 것 같아요?"는 묻지 않아요.</p>
+   </section>
+  </div>
+  <h2 style="margin-top:26px">진행한 세션 <span class="muted" style="font-size:14px;font-weight:500">${list.length}개</span></h2>
+  ${list.length?`<div class="sessions">${list.map(s=>`<div class="srow"><span class="badge">${esc(s.code||'?')}</span><div style="min-width:0"><b>${esc(ROLES[s.role]||'')}</b><div class="muted" style="font-size:13px">${esc(s.facilitator||'진행자 미기록')}, ${new Date(s.updatedAt||s.createdAt).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div></div><button class="btn small" data-open="${esc(s.id)}" type="button">이어서 진행</button></div>`).join('')}</div>`
+   :`<div class="empty">아직 진행한 세션이 없어요. 위에서 참여자 번호를 넣고 첫 세션을 시작하세요.</div>`}${dataTools()}`;
+}
+
+/* ===================== PLAY ===================== */
+function steps(){return cur&&cur.role==='driver'?STEPS_DRIVER:STEPS_USER}
+function railHTML(){return `<nav class="rail" id="rail" aria-label="단계">${steps().map((s,i)=>`<button type="button" data-step="${i}" ${i===step?'aria-current="step"':''} class="${i<step?'done':''}"><span class="n">${String(i).padStart(2,'0')}</span>${esc(s.t)}</button>`).join('')}</nav>`}
+function renderPlay(){
+  const S=steps(), s=S[step];
+  return `<div class="row" style="justify-content:space-between;margin-bottom:12px"><div class="row"><span class="badge">${esc(cur.code)}</span><b>${esc(ROLES[cur.role])}</b></div><button class="btn small ghost" id="btn-exit" type="button">세션 목록으로</button></div>
+  <div class="play">${railHTML()}
+   <div class="stage"><div class="stephead"><div><h1>${esc(s.t)}</h1></div><span class="time">${s.min}</span></div>
+    ${STEP_RENDER[s.id]()}
+    <div class="foot"><button class="btn ghost" data-go="-1" type="button" ${step===0?'disabled':''}>이전</button><span class="status" id="status" aria-live="polite">${esc(saving)}</span>${step<S.length-1?`<button class="btn primary" data-go="1" type="button">다음: ${esc(S[step+1].t)}</button>`:`<button class="btn primary" id="btn-finish" type="button">세션 끝내고 저장</button>`}</div>
+   </div></div>`;
+}
+const STEP_RENDER={
+ start(){return `<div class="panel">${ask('"오늘은 정답이 있는 시간이 아니에요. 늦은 밤 집에 갔던 실제 경험을 듣고, 카드로 \'이런 게 있었다면?\'을 같이 상상해 보려고 해요. <b>녹음해도 될까요?</b> 불편한 질문은 넘기셔도 되고, 언제든 멈출 수 있어요."')}
+  <label class="row" style="font-weight:600"><input type="checkbox" id="chk-consent" ${cur.consent?'checked':''}> 녹음과 기록에 동의를 받았어요 (이름 대신 번호로 기록, 과제 후 삭제)</label>
+  <label class="f" for="in-fac2">진행자 / 기록자<input type="text" id="in-fac2" data-text="facilitator" value="${esc(cur.facilitator)}"></label>
+  ${cur.role==='driver'?'':`<div class="card k-future" style="box-shadow:none"><span class="code">P0, 전제 카드 (③단계에서 보여 줘요)</span><span class="tx">${esc(PREMISE)}</span></div>`}</div>`},
+ night(){return `<div class="panel">${ask('"최근 <b>밤 11시 넘어</b> 집에 간 날 하나만 떠올려 주세요. 몇 시였고, 어디서 출발하셨고, 누구와였나요?"')}
+  ${['T','L','R'].map(g=>`<div><h3>${{T:'시간',L:'장소',R:'역할'}[g]}</h3><div class="grid g6">${NIGHT[g].map(([c,t])=>`<button type="button" class="card pick k-night" data-set="night.${g}" data-val="${c}" aria-pressed="${cur.night[g]===c}"><span class="code">${c}</span><span class="tx">${t}</span></button>`).join('')}</div></div>`).join('')}
+  <label class="f" for="t-night">그날 밤 한 줄 (출발지, 도착지, 탄 것)${ta('night.memo',cur.night.memo,'예: 강남에서 야근, 광역버스로 용인','t-night')}</label></div>`},
+ journey(){return `<div class="panel">${ask('"그날 <b>①부터</b> 무엇을 하셨는지 한 줄씩 말해 주세요." → "가장 힘들었던 장면에 <b>★</b>을 붙여 주세요." → ⑥은 <b>실제 경험부터</b> 물어요.')}
+  <div class="grid g3">${JOURNEY.map(([c,t,d])=>`<div class="card k-journey"><div class="row" style="justify-content:space-between"><span class="code">${c}</span><button type="button" class="chip" data-set="star" data-val="${c}" aria-pressed="${cur.star===c}">★ 가장 힘듦</button></div><span class="tx">${t}</span><span class="meta">${d}</span>${c==='J6'?ta('j6.text',cur.j6.text,'내리고 집까지 걸어간 길은 어땠어요?','t-j6')+eiUI('j6.ei',cur.j6.ei):ta('journey.'+c,cur.journey[c],'그날 한 일','t-'+c)}</div>`).join('')}</div>
+  <label class="f" for="t-starwhy">★ 이유 (원문 그대로)${ta('starWhy',cur.starWhy,'','t-starwhy')}</label></div>`},
+ future(){return `<div class="panel">${ask('먼저 <b>전제 카드</b>를 읽어 줘요. 그다음 한 장씩: "그날 밤 이게 있었다면, <b>몇 번 장면</b>이 달라졌을까요? 그 장면 위에 놓아 주세요."')}
+  <div class="card k-future" style="box-shadow:none"><span class="code">P0, 전제</span><span class="tx">${esc(PREMISE)}</span></div>
+  ${FUTURE.map(([c,n,t,w,q])=>{const f=cur.future[c]||{};return `<div class="situation"><div class="card k-future"><span class="code">${c}, ${esc(w)}</span><span class="tx" style="font-size:19px">${n}</span><span>${esc(t)}</span><span class="meta">${esc(q)}</span></div>
+   <div class="panel" style="padding:12px"><div><h3>놓은 장면</h3><div class="seg">${JOURNEY.map(([jc,jt])=>`<button type="button" class="chip" data-toggle="future.${c}.scenes" data-val="${jc}" aria-pressed="${(f.scenes||[]).includes(jc)}">${jt.slice(0,1)}</button>`).join('')}</div></div>
+   <div><h3>반응</h3>${reactUI('future.'+c+'.react',f.react)}</div>
+   <label class="f" for="t-f-${c}">이유 (원문)${ta('future.'+c+'.why',f.why,'어떻게 달라져요? 그래도 남는 걱정은요?','t-f-'+c)}</label>${eiUI('future.'+c+'.ei',f.ei)}</div></div>`}).join('')}</div>`},
+ cons(){const played=cur.played||[];return `<div class="panel">${ask('제약 카드 <b>2~3장</b>을 골라 하나씩 보여 줘요. 진행자가 기준 카드 2장을 내밀고 "<b>이 상황이면 어떤 걸 고르실래요?</b> 왜요? 실제로 그런 적 있어요?"')}
+  <div><h3>보여 줄 제약 카드 고르기</h3><div class="grid g3">${CONS.map(([c,t,when])=>`<button type="button" class="card pick k-cons" data-toggle="played" data-val="${c}" aria-pressed="${played.includes(c)}"><span class="code">${c}, ${when==='now'?'지금':'미래 (필수 조건 뒤)'}</span><span class="tx">${esc(t)}</span></button>`).join('')}</div></div>
+  ${played.length?played.map(c=>situationHTML('cons',CONS.find(x=>x[0]===c),false)).join(''):'<div class="empty">위에서 제약 카드를 골라 주세요.</div>'}</div>`},
+ events(){const drawn=cur.drawn||[];return `<div class="panel">${ask('종류별로 <b>1장씩</b> 뒤집어 뽑아요. <b>R4(혼자 남았다)</b>는 꼭 보여 줘요. 관계, 탈출, 하차 후 카드 전에는 "<b>불편하면 넘겨도 돼요</b>"라고 말해요. 순서: 경험 먼저 → "기사가 없다면요?" → 기준 카드 2장.')}
+  <div class="row"><button class="btn primary" id="btn-draw" type="button">${drawn.length?'다시 뽑기':'종류별로 1장씩 뽑기'}</button><span class="muted" style="font-size:13px">직접 고르려면 아래 목록에서 눌러요.</span></div>
+  <details><summary style="cursor:pointer;font-weight:600">이벤트 카드 15장 직접 고르기</summary><div class="grid g3" style="margin-top:10px">${EVENTS.map(e=>`<button type="button" class="card pick k-event" data-toggle="drawn" data-val="${e[0]}" aria-pressed="${drawn.includes(e[0])}"><span class="code">${e[0]}, ${ETYPES[e[1]][0]}, 장면 ${e[2]}</span><span class="tx">${esc(e[3])}</span></button>`).join('')}</div></details>
+  ${drawn.length?drawn.map(c=>situationHTML('events',EV[c],true)).join(''):'<div class="empty">아직 뽑은 이벤트 카드가 없어요.</div>'}</div>`},
+ n3(){return `<div class="panel">${ask('"혼자 남았다" 다음에 꺼내요. 답은 해결책을 주지 말고 <b>참여자가 빈칸에 직접</b> 써요. 막히면 "지금 버스에서는 기사가 무엇을 해 줄 때 안심되셨어요?"')}
+  <div class="situation"><div class="card k-future"><span class="code">${N3[0]}, ${esc(N3[3])}</span><span class="tx" style="font-size:19px">${N3[1]}</span><span>${esc(N3[2])}</span></div>
+  <div class="panel" style="padding:12px"><div class="card k-blank" style="box-shadow:none"><span class="code">B1, 빈 카드</span><label class="f" for="t-n3" style="color:var(--ink)">이게 있으면 탈 것 같아요${ta('n3.text',cur.n3.text,'참여자가 쓴 말 그대로','t-n3')}</label></div>
+  <div><h3>반응</h3>${reactUI('n3.react',cur.n3.react)}</div>${eiUI('n3.ei',cur.n3.ei)}
+  <label class="f" for="t-b2">이게 없으면 안 탈 것 같아요 (B2)${ta('b2',cur.b2,'','t-b2')}</label></div></div></div>`},
+ opts(){return `<div class="panel">${ask('부수 카드를 하나씩 보여 주고 3칸 중 하나에 놓게 해요. <b>S6(집 도착 확인)</b>은 ⑥ 경험을 들은 뒤에. 마지막에 "이벤트 때 🔴였는데, <b>이 중 어떤 카드가 있으면 🟢로 바뀌어요?</b>"')}
+  <div class="legend"><span><i class="dot" style="background:var(--ok)"></i>근거 높음, 파급력 큼</span><span><i class="dot" style="background:var(--safe)"></i>확인할 것</span><span><i class="dot" style="background:var(--sub)"></i>미확인 (범위 ⑥)</span></div>
+  ${OPTIONS.map(([c,n,t,ev])=>`<div class="optrow"><div style="min-width:0"><span class="code" style="font-family:var(--f-mono);font-size:12px;color:var(--opt)"><i class="dot" style="background:${ev==='ok'?'var(--ok)':ev==='pink'?'var(--safe)':'var(--sub)'}"></i>${c}, ${n}</span><div style="font-weight:600">${esc(t)}</div></div>
+   <div class="seg">${[['must','꼭 있어야'],['nice','있으면 좋다'],['no','없어도 된다']].map(([v,l])=>`<button type="button" class="chip" data-set="opts.${c}" data-val="${v}" aria-pressed="${cur.opts[c]===v}">${l}</button>`).join('')}</div></div>`).join('')}
+  <label class="f" for="in-optnew">참여자가 만든 옵션 (S7 빈 카드)<input type="text" id="in-optnew" data-text="opts.new" value="${esc(cur.opts.new||'')}"></label>
+  <div><h3>🔴를 🟢로 바꿔 준 카드</h3><div class="seg">${OPTIONS.map(([c,n])=>`<button type="button" class="chip" data-set="flip" data-val="${c}" aria-pressed="${cur.flip===c}">${c} ${n}</button>`).join('')}<button type="button" class="chip" data-set="flip" data-val="none" aria-pressed="${cur.flip==='none'}">없음</button></div></div>
+  <label class="f" for="t-flip">이유${ta('flipWhy',cur.flipWhy,'','t-flip')}</label></div>`},
+ close(){const prev=Object.values(sessions).filter(s=>s.id!==cur.id&&s.role!=='driver'&&(s.star||s.n3?.text)).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0))[0];
+  return `<div class="panel">${ask('"처음 그날 밤과, 다시 짠 밤을 나란히 보면 <b>가장 크게 달라진 순간</b>은 어디예요? <b>끝까지 남는 걱정</b> 하나만 꼽는다면요?"')}
+  <label class="f" for="t-changed">가장 달라진 순간${ta('changed',cur.changed,'','t-changed')}</label>
+  <label class="f" for="t-worry">끝까지 남는 걱정${ta('worry',cur.worry,'','t-worry')}</label>
+  <div class="card k-journey" style="box-shadow:none"><span class="code">릴레이 (선택)</span>${prev?`<span>앞선 참여자 <b>${esc(prev.code)}</b>는 ★을 <b>${esc(jName(prev.star)||'?')}</b>에 붙였고, 빈 카드에 "<b>${esc(prev.n3?.text||'-')}</b>"라고 썼어요.</span>`:'<span class="muted">아직 비교할 앞선 참여자가 없어요.</span>'}
+  <label class="f" for="t-relay">"같은 점, 다른 점이 있나요?"${ta('relay',cur.relay,'','t-relay')}</label></div>
+  ${ask('"오늘 이야기는 번호로만 기록하고 과제가 끝나면 삭제해요. 감사합니다."')}</div>`},
+ dhidden(){return `<div class="panel">${ask('"최근 밤 운행 중 기억에 남는 날이 있으세요? 승객이 타고 내릴 때 무엇을 보세요?" → "<b>승객이 모르는 사이에 하시는 일</b>이 있나요?" (예: 불 끄기, 취객 살피기, 내릴 곳 알려 주기)')}
+  <label class="f" for="t-hidden">숨은 일 (한 줄에 하나씩)${ta('hidden',cur.hidden,'예: 막차 때 실내등을 끈다','t-hidden')}</label></div>`},
+ dpass(){const us=Object.values(sessions).filter(s=>s.role!=='driver');const b1=us.map(s=>s.n3?.text).filter(Boolean);const keep=critTally(us);const top=Object.entries(keep).sort((a,b)=>b[1].kept-a[1].kept).slice(0,3);
+  return `<div class="panel">${ask('승객 결과를 보여 줘요. "승객들은 이걸 끝까지 지킨대요. 이게 있어야 탄대요. <b>지금은 이걸 누가 하나요?</b>"')}
+  <div class="grid g2"><div class="card k-blank" style="box-shadow:none"><span class="code">승객들이 쓴 "이게 있으면 탄다"</span>${b1.length?b1.map(t=>`<span>"${esc(t)}"</span>`).join(''):'<span class="muted">아직 승객 세션 결과가 없어요.</span>'}</div>
+  <div class="card k-safe" style="box-shadow:none"><span class="code">승객들이 가장 많이 지킨 기준</span>${top.length&&top[0][1].kept?top.map(([c,v])=>`<span>${c} ${esc(CRIT[c][1])} (${v.kept}번)</span>`).join(''):'<span class="muted">아직 결과가 없어요.</span>'}</div></div>
+  <label class="f" for="t-dpass">기사의 반응${ta('dpass',cur.dpass,'','t-dpass')}</label></div>`},
+ devents(){return `<div class="panel">${ask('"이럴 때 <b>지금은 어떻게</b> 대응하세요? <b>몇 분 안에</b>요?" → "기사가 없다면 무엇이 대신할 수 있을까요?"')}
+  ${['R1','X1','R4'].map(c=>{const e=EV[c],d=cur.devents[c]||{};return `<div class="situation"><div class="card k-event"><span class="code">${c}, ${ETYPES[e[1]][0]}</span><span class="tx">${esc(e[3])}</span></div><div class="panel" style="padding:12px"><label class="f" for="t-d-${c}">지금 대응 방법${ta('devents.'+c+'.how',d.how,'','t-d-'+c)}</label><label class="f" for="in-dt-${c}">걸리는 시간<input type="text" id="in-dt-${c}" data-text="devents.${c}.time" value="${esc(d.time||'')}" placeholder="예: 2분"></label><label class="f" for="t-dr-${c}">기사가 없다면 무엇이 대신?${ta('devents.'+c+'.replace',d.replace,'','t-dr-'+c)}</label></div></div>`}).join('')}</div>`},
+ dclose(){return `<div class="panel">${ask('"무인으로 바뀌면 <b>대신하기 가장 어려운 일</b>은 무엇일까요?"')}
+  <label class="f" for="t-dhard">대신하기 어려운 일 (리스크)${ta('dhard',cur.dhard,'','t-dhard')}</label>
+  ${ask('"오늘 이야기는 번호로만 기록하고 과제가 끝나면 삭제해요. 감사합니다."')}</div>`}
+};
+function jName(c){const j=JOURNEY.find(x=>x[0]===c);return j?j[1]:''}
+function situationHTML(kind,card,isEvent){
+  const [c]=card; const text=isEvent?card[3]:card[1]; const a=isEvent?card[4]:card[3], b=isEvent?card[5]:card[4];
+  const d=(cur[kind]||{})[c]||{};
+  return `<div class="situation" style="margin-top:6px"><div class="card ${isEvent?'k-event':'k-cons'}"><span class="code">${c}${isEvent?`, ${ETYPES[card[1]][0]}, 장면 ${card[2]}`:''}${c==='R4'?', 필수':''}</span><span class="tx" style="font-size:18px">${esc(text)}</span>${isEvent?`<span class="meta">${esc(ETYPES[card[1]][1])}</span>`:''}</div>
+  <div class="panel" style="padding:12px">${isEvent?`<div><h3>실제 경험이 있나요?</h3>${eiUI(kind+'.'+c+'.ei',d.ei)}</div><div><h3>기사가 없다면, 계속 타시겠어요?</h3>${reactUI(kind+'.'+c+'.react',d.react)}</div>`:''}
+   <div><h3>"어떤 걸 고르실래요?"</h3><div class="vs">${critCard(a,d.pick===a,`data-set="${kind}.${c}.pick" data-val="${a}"`)}<span class="or">vs</span>${critCard(b,d.pick===b,`data-set="${kind}.${c}.pick" data-val="${b}"`)}</div>
+   <div class="row" style="margin-top:8px"><button type="button" class="chip" data-set="${kind}.${c}.pick" data-val="none" aria-pressed="${d.pick==='none'}">둘 다 아니에요 (빈 카드)</button></div></div>
+   ${d.pick==='none'?`<label class="f" for="in-o-${c}">참여자가 쓴 기준<input type="text" id="in-o-${c}" data-text="${kind}.${c}.other" value="${esc(d.other||'')}"></label>`:''}
+   <label class="f" for="t-w-${c}">이유 (원문)${ta(kind+'.'+c+'.why',d.why,'왜요? 실제로 그런 적 있어요?','t-w-'+c)}</label>${isEvent?'':eiUI(kind+'.'+c+'.ei',d.ei)}</div></div>`;
+}
+
+/* ===================== RESULTS ===================== */
+function critTally(list){
+  const t={};Object.keys(CRIT).forEach(k=>t[k]={kept:0,dropped:0});
+  list.forEach(s=>{
+    const go=(kind,arr)=>Object.entries(s[kind]||{}).forEach(([c,d])=>{const card=arr(c);if(!card||!d.pick)return;const [a,b]=card;if(d.pick==='none')return;const other=d.pick===a?b:a;t[d.pick]&&t[d.pick].kept++;t[other]&&t[other].dropped++;});
+    go('cons',c=>{const x=CONS.find(y=>y[0]===c);return x?[x[3],x[4]]:null});
+    go('events',c=>{const x=EV[c];return x?[x[4],x[5]]:null});
+  });return t;}
+function renderResults(){
+  const all=Object.values(sessions), us=all.filter(s=>s.role!=='driver'), dr=all.filter(s=>s.role==='driver');
+  if(!all.length) return `<h1>팀 결과</h1><p class="lede">세션이 쌓이면 여기에서 개입 지점, 범위, Trade-off 규칙, 서비스 원칙이 자동으로 정리돼요.</p><div class="empty">아직 진행한 세션이 없어요. "세션 진행"에서 첫 세션을 시작하거나, 팀원의 결과 파일을 합쳐 보세요.</div>${dataTools()}`;
+  const star={};JOURNEY.forEach(([c])=>star[c]=0);us.forEach(s=>{if(s.star)star[s.star]++});
+  const fut={};FUTURE.concat([N3]).forEach(([c])=>fut[c]={ok:0,mid:0,no:0,scenes:{}});
+  us.forEach(s=>{Object.entries(s.future||{}).forEach(([c,f])=>{if(!fut[c])return;if(f.react)fut[c][f.react]++;(f.scenes||[]).forEach(j=>fut[c].scenes[j]=(fut[c].scenes[j]||0)+1)});if(s.n3?.react)fut.N3[s.n3.react]++;});
+  const ct=critTally(us);
+  const ev={};Object.keys(ETYPES).forEach(k=>ev[k]={ok:0,mid:0,no:0,n:0});us.forEach(s=>Object.entries(s.events||{}).forEach(([c,d])=>{const e=EV[c];if(!e)return;ev[e[1]].n++;if(d.react)ev[e[1]][d.react]++;}));
+  const op={};OPTIONS.forEach(([c])=>op[c]={must:0,nice:0,no:0,flip:0});us.forEach(s=>{Object.entries(s.opts||{}).forEach(([c,v])=>{if(op[c]&&op[c][v]!=null)op[c][v]++});if(op[s.flip])op[s.flip].flip++;});
+  const j6E=us.filter(s=>s.j6?.ei==='E').length;
+  const topStar=Object.entries(star).sort((a,b)=>b[1]-a[1])[0];
+  const topEv=Object.entries(ev).sort((a,b)=>b[1].no-a[1].no)[0];
+  const max=Math.max(1,...Object.values(star));
+  const bar=(o,tot)=>`<div class="bar" aria-hidden="true">${[['ok','var(--ok)'],['mid','var(--mid)'],['no','var(--no)']].map(([k,c])=>`<i style="width:${tot?o[k]/tot*100:0}%;background:${c}"></i>`).join('')}</div>`;
+  const quotes=us.flatMap(s=>[s.n3?.text&&['B1',s.code,s.n3.text],s.b2&&['B2',s.code,s.b2]]).filter(Boolean);
+  return `<h1>팀 결과</h1><p class="lede">승객 세션 ${us.length}개, 기사 세션 ${dr.length}개를 합친 결과예요. 숫자는 사람 수예요. "실제 경험(E)"과 "상상(I)"은 기록표에서 나눠 확인해요.</p>
+  <div class="grid g3">
+   <div class="verdict"><span class="muted" style="font-size:12px;font-weight:600">개입 지점 후보</span><b>${topStar&&topStar[1]?esc(jName(topStar[0]))+` (★ ${topStar[1]}명)`:'아직 없음'}</b><span class="muted" style="font-size:13px">★과 미래 조건이 몰린 장면 중 E 근거가 있는 곳</span></div>
+   <div class="verdict"><span class="muted" style="font-size:12px;font-weight:600">서비스 범위 (⑥ 집까지)</span><b>${j6E>=2?'범위 확장 후보 (E '+j6E+'명)':'하차까지 (E '+j6E+'명, 2명 미만)'}</b><span class="muted" style="font-size:13px">⑥에 실제 경험(E)이 2명 이상이면 범위 후보</span></div>
+   <div class="verdict"><span class="muted" style="font-size:12px;font-weight:600">🔴가 가장 많은 이벤트 종류</span><b>${topEv&&topEv[1].no?ETYPES[topEv[0]][0]+` (🔴 ${topEv[1].no}명)`:'아직 없음'}</b><span class="muted" style="font-size:13px">${topEv&&topEv[1].no?esc(ETYPES[topEv[0]][1]):'이벤트 반응이 쌓이면 보여요'}</span></div>
+  </div>
+  <h2 style="margin-top:26px">★ 가장 힘든 장면</h2>
+  <div class="tbl"><table><thead><tr><th>장면</th><th style="width:60%">사람 수</th><th class="num">명</th></tr></thead><tbody>${JOURNEY.map(([c,t])=>`<tr><td>${t}</td><td><div class="bar"><i style="width:${star[c]/max*100}%;background:var(--accent)"></i></div></td><td class="num">${star[c]}</td></tr>`).join('')}</tbody></table></div>
+  <h2 style="margin-top:26px">Trade-off: 무엇을 지키고 무엇을 포기했나</h2>
+  <p class="muted" style="margin:0 0 8px">제약과 이벤트 상황에서 기준 카드 2장 중 고른 횟수(지킴)와 고르지 않은 횟수(포기)예요.</p>
+  <div class="tbl"><table><thead><tr><th>기준</th><th>종류</th><th class="num">지킴</th><th class="num">포기</th><th style="width:30%">비율</th></tr></thead><tbody>${Object.entries(ct).sort((a,b)=>(b[1].kept-b[1].dropped)-(a[1].kept-a[1].dropped)).map(([c,v])=>{const t=v.kept+v.dropped;return `<tr><td><b>${c}</b> ${esc(CRIT[c][1])}</td><td>${CATNAME[CRIT[c][0]]}</td><td class="num">${v.kept}</td><td class="num">${v.dropped}</td><td><div class="bar"><i style="width:${t?v.kept/t*100:0}%;background:var(--ok)"></i><i style="width:${t?v.dropped/t*100:0}%;background:var(--no)"></i></div></td></tr>`}).join('')}</tbody></table></div>
+  <div class="grid g2" style="margin-top:26px">
+   <section><h2>필수 미래 조건 반응</h2><div class="tbl"><table><thead><tr><th>조건</th><th>🟢 / 🟡 / 🔴</th><th>가장 많이 놓은 장면</th></tr></thead><tbody>${FUTURE.concat([N3]).map(([c,n])=>{const f=fut[c],tot=f.ok+f.mid+f.no;const sc=Object.entries(f.scenes).sort((a,b)=>b[1]-a[1])[0];return `<tr><td><b>${c}</b> ${n}</td><td>${bar(f,tot)}<span class="muted" style="font-size:12px">${f.ok} / ${f.mid} / ${f.no}</span></td><td>${sc?esc(jName(sc[0]))+' ('+sc[1]+')':'-'}</td></tr>`}).join('')}</tbody></table></div></section>
+   <section><h2>이벤트 종류별 반응</h2><div class="tbl"><table><thead><tr><th>종류</th><th>🟢 / 🟡 / 🔴</th><th class="num">장</th></tr></thead><tbody>${Object.entries(ev).map(([k,v])=>`<tr><td><b>${ETYPES[k][0]}</b><div class="muted" style="font-size:12px">${ETYPES[k][1]}</div></td><td>${bar(v,v.ok+v.mid+v.no)}<span class="muted" style="font-size:12px">${v.ok} / ${v.mid} / ${v.no}</span></td><td class="num">${v.n}</td></tr>`).join('')}</tbody></table></div></section>
+  </div>
+  <h2 style="margin-top:26px">부수 조건 (옵션) 우선순위</h2>
+  <div class="tbl"><table><thead><tr><th>옵션</th><th class="num">꼭 있어야</th><th class="num">있으면 좋다</th><th class="num">없어도 된다</th><th class="num">🔴→🟢</th></tr></thead><tbody>${OPTIONS.map(([c,n])=>`<tr><td><b>${c}</b> ${n}</td><td class="num">${op[c].must}</td><td class="num">${op[c].nice}</td><td class="num">${op[c].no}</td><td class="num">${op[c].flip}</td></tr>`).join('')}</tbody></table></div>
+  <p class="muted" style="font-size:13px">🔴를 🟢로 바꿔 준 카드는 "부수"가 아니라 사실상 필수일 수 있어요.</p>
+  <h2 style="margin-top:26px">서비스 원칙 재료 (참여자가 직접 쓴 말)</h2>
+  ${quotes.length?`<div class="grid g2">${quotes.map(([k,c,t])=>`<div class="quote"><div class="who">${esc(c)}, ${k==='B1'?'이게 있으면 탄다':'이게 없으면 안 탄다'}</div>"${esc(t)}"</div>`).join('')}</div>`:'<div class="empty">아직 빈 카드에 쓴 말이 없어요.</div>'}
+  <h2 style="margin-top:26px">차이 로그 (참여자별)</h2>
+  <div class="tbl"><table><thead><tr><th>번호</th><th>역할</th><th>그날 밤</th><th>★ 장면</th><th>⑥ (E/I)</th><th>빈 카드 B1</th><th>남는 걱정</th></tr></thead><tbody>${us.map(s=>`<tr><td><span class="badge">${esc(s.code)}</span></td><td>${s.role==='contrast'?'Contrast':'Core'}</td><td>${['T','L','R'].map(g=>{const x=(NIGHT[g].find(y=>y[0]===s.night?.[g])||[])[1];return x?esc(x):''}).filter(Boolean).join(', ')||'-'}</td><td>${esc(jName(s.star)||'-')}</td><td>${esc(s.j6?.ei||'-')}</td><td>${esc(s.n3?.text||'-')}</td><td>${esc(s.worry||'-')}</td></tr>`).join('')}</tbody></table></div>
+  ${dr.length?`<h2 style="margin-top:26px">기사 세션: 숨은 일과 리스크</h2><div class="grid g2">${dr.map(s=>`<div class="panel"><div class="row"><span class="badge">${esc(s.code)}</span><b>숨은 일</b></div><div style="white-space:pre-wrap">${esc(s.hidden||'-')}</div><b>대신하기 어려운 일</b><div style="white-space:pre-wrap">${esc(s.dhard||'-')}</div></div>`).join('')}</div>`:''}${dataTools()}`;
+}
+
+function dataTools(){return `<section class="panel datapanel" aria-labelledby="dt-h"><h2 id="dt-h">결과 파일 (팀원끼리 합치기)</h2>
+  <p class="muted" style="margin:0">이 사이트는 서버 없이 <b>이 브라우저에만</b> 저장해요. 세션을 마치면 <b>결과 파일 저장</b>으로 내려받아 팀 폴더에 올려 주세요. 결과를 모아 볼 사람은 팀원들의 파일을 <b>결과 합치기</b>로 한꺼번에 불러오면 돼요. 같은 세션은 가장 최근 것만 남아요.</p>
+  <div class="row"><button class="btn primary" id="btn-export" type="button">결과 파일 저장 (${Object.keys(sessions).length}개 세션)</button>
+  <label class="btn" for="in-import" style="display:inline-block">결과 합치기<input type="file" id="in-import" accept="application/json,.json" multiple hidden></label>
+  <button class="btn ghost" id="btn-clear" type="button">이 브라우저 기록 지우기</button></div>
+  <div id="clear-confirm" hidden class="note">정말 지울까요? 저장하지 않은 세션은 되돌릴 수 없어요. <button class="btn small" id="btn-clear-yes" type="button">지우기</button> <button class="btn small ghost" id="btn-clear-no" type="button">취소</button></div>
+  <span class="status" id="dt-status" aria-live="polite"></span></section>`}
+function exportJSON(){const data={app:'drt-cocreation',version:1,exportedAt:new Date().toISOString(),sessions};const blob=new Blob([JSON.stringify(data,null,1)],{type:'application/json'});const a=document.createElement('a');const d=new Date();a.href=URL.createObjectURL(blob);a.download=`cocreation-${d.getMonth()+1}${String(d.getDate()).padStart(2,'0')}-${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);}
+async function importFiles(files){let n=0,bad=0;for(const f of files){try{const j=JSON.parse(await f.text());const ss=j.sessions||j;for(const [id,s] of Object.entries(ss)){if(!s||typeof s!=='object'||!s.id)continue;if(!sessions[id]||(s.updatedAt||0)>(sessions[id].updatedAt||0)){sessions[id]=s;n++;}}}catch(e){bad++}}lsSave();render();const st=document.getElementById('dt-status');if(st)st.textContent=`${n}개 세션을 합쳤어요.`+(bad?` 읽지 못한 파일 ${bad}개는 건너뛰었어요.`:'');}
+/* ===================== CARDS ===================== */
+function renderCards(){
+  const deck=(t,sub,html)=>`<section style="margin-top:22px"><div class="deckhead"><h2>${t}</h2><span class="muted">${sub}</span></div><div class="grid g3" style="margin-top:8px">${html}</div></section>`;
+  return `<h1>카드 전체</h1><p class="lede">세션에 쓰는 카드 전부예요. 부루마블로 치면 여정은 게임판, 미래 조건은 규칙이 바뀌는 카드, 이벤트는 황금열쇠, 제약은 무인도와 통행료, 기준 카드는 내 가방 속 짐이에요.</p>
+  ${deck('전제','시작할 때 서비스의 큰 그림만',`<div class="card k-future"><span class="code">P0</span><span class="tx">${esc(PREMISE)}</span></div>`)}
+  ${deck('나의 밤 (10)','참여자의 실제 그날 밤을 고정',Object.values(NIGHT).flat().map(([c,t])=>`<div class="card k-night"><span class="code">${c}</span><span class="tx">${t}</span></div>`).join(''))}
+  ${deck('여정 (6)','우리 여정맵 그대로',JOURNEY.map(([c,t,d])=>`<div class="card k-journey"><span class="code">${c}</span><span class="tx">${t}</span><span class="meta">${d}</span></div>`).join(''))}
+  ${deck('필수 미래 조건 (4)','서비스의 본질. 모두에게 보여 줌',FUTURE.concat([N3]).map(([c,n,t,w])=>`<div class="card k-future"><span class="code">${c}, ${esc(w)}</span><span class="tx">${n}</span><span>${esc(t)}</span></div>`).join(''))}
+  ${deck('부수 미래 조건 (6)','옵션. 꼭 있어야 / 있으면 좋다 / 없어도 된다',OPTIONS.map(([c,n,t])=>`<div class="card k-opt"><span class="code">${c}</span><span class="tx">${n}</span><span>${esc(t)}</span></div>`).join(''))}
+  ${deck('기준 카드 (11)','상황마다 2장만 내민다',Object.keys(CRIT).map(c=>`<div class="card k-${CRIT[c][0]}"><span class="code">${c}</span><span class="tx">${esc(CRIT[c][1])}</span><span class="meta">${esc(CRIT[c][2])}</span></div>`).join(''))}
+  ${deck('제약 카드 (6)','지금 4장 + 미래 2장',CONS.map(([c,t,w,a,b])=>`<div class="card k-cons"><span class="code">${c}, ${w==='now'?'지금':'미래'}</span><span class="tx">${esc(t)}</span><span class="meta">내미는 2장: ${a} vs ${b}</span></div>`).join(''))}
+  ${deck('이벤트 카드 (15)','종류별 1장씩, R4는 필수',EVENTS.map(e=>`<div class="card k-event"><span class="code">${e[0]}, ${ETYPES[e[1]][0]}, 장면 ${e[2]}</span><span class="tx">${esc(e[3])}</span><span class="meta">내미는 2장: ${e[4]} vs ${e[5]}</span></div>`).join(''))}`;
+}
+
+/* ===================== EVENTS ===================== */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button,a,[data-open]');if(!t)return;
+  if(t.id==='btn-new'){const code=($('#in-code').value||'').trim().toUpperCase();if(!code){$('#in-code').focus();$('#in-code').placeholder='참여자 번호를 먼저 넣어 주세요';return;}const role=(document.querySelector('#role-pick [aria-pressed="true"]')||{}).dataset?.role||'core';cur=newSession(code,role);cur.facilitator=$('#in-fac').value.trim();step=0;sessions[cur.id]=cur;markDirty();flush();render();scrollTo(0,0);return;}
+  if(t.dataset.role){document.querySelectorAll('#role-pick .chip').forEach(c=>c.setAttribute('aria-pressed',c===t));return;}
+  if(t.dataset.open){cur=JSON.parse(JSON.stringify(sessions[t.dataset.open]));step=0;render();scrollTo(0,0);return;}
+  if(t.id==='btn-exit'){flush();cur=null;render();return;}
+  if(t.id==='btn-finish'){flush();cur=null;location.hash='#results';render();return;}
+  if(t.dataset.go){flush();step=Math.max(0,Math.min(steps().length-1,step+Number(t.dataset.go)));render();scrollTo(0,0);return;}
+  if(t.dataset.step!=null&&t.closest('#rail')){flush();step=Number(t.dataset.step);render();scrollTo(0,0);return;}
+  if(t.id==='btn-draw'){const pick=Object.keys(ETYPES).map(k=>{const pool=EVENTS.filter(x=>x[1]===k);return pool[Math.floor(Math.random()*pool.length)][0]});if(!pick.includes('R4')){pick[1]='R4';}cur.drawn=pick;markDirty();render();return;}
+  if(t.dataset.set&&cur){const p=t.dataset.set,v=t.dataset.val;setP(cur,p,getP(cur,p)===v?'':v);markDirty();render();return;}
+  if(t.dataset.toggle&&cur){const p=t.dataset.toggle,v=t.dataset.val;let a=getP(cur,p);if(!Array.isArray(a))a=[];a=a.includes(v)?a.filter(x=>x!==v):a.concat(v);setP(cur,p,a);markDirty();render();return;}
+});
+document.addEventListener('input',e=>{const t=e.target;if(t.dataset&&t.dataset.text&&cur){setP(cur,t.dataset.text,t.value);markDirty();}});
+document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
+  if(t.id==='btn-export'){if(cur)flush();exportJSON();const st=document.getElementById('dt-status');if(st)st.textContent='결과 파일을 내려받았어요. 팀 폴더에 올려 주세요.';}
+  if(t.id==='btn-clear'){document.getElementById('clear-confirm').hidden=false;}
+  if(t.id==='btn-clear-no'){document.getElementById('clear-confirm').hidden=true;}
+  if(t.id==='btn-clear-yes'){sessions={};cur=null;lsSave();render();}
+});
+document.addEventListener('change',e=>{if(e.target.id==='in-import'&&e.target.files.length){importFiles([...e.target.files]);return;}if(e.target.id==='chk-consent'&&cur){cur.consent=e.target.checked;markDirty();}});
+route();
+</script>
+
+</body>
+</html>
